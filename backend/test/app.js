@@ -1,14 +1,7 @@
 const express = require('express')
 const app = express()
 
-// // this middleware will not allow the request to go beyond it
-// app.use(function(req, res) {
-//   res.send('Hello World');
-// });
-
-app.get('/user/:id',function (req, res) {
-  res.send('Hello user '+req.params.id+'.')
-})
+app.get('/user/:id', (req, res) => res.send(`Hello user ${req.params.id}.`))
 
 app.get('/', function (req, res) {
   res.send('Hello World!')
