@@ -1,6 +1,15 @@
 const express = require('express')
 const app = express()
 
+// // this middleware will not allow the request to go beyond it
+// app.use(function(req, res) {
+//   res.send('Hello World');
+// });
+
+app.get('/user/:id',function (req, res) {
+  res.send('Hello user '+req.params.id+'.')
+})
+
 app.get('/', function (req, res) {
   res.send('Hello World!')
 })
@@ -24,7 +33,6 @@ app.delete('/user', function (req, res) {
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!')
 })
-
 
 //test
 console.log('test');
