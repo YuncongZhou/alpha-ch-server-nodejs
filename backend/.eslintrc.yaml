@@ -1,0 +1,16 @@
+---
+extends: airbnb-base
+env:
+  node: true
+settings:
+  import/resolver: node
+rules:
+  semi:
+  - error
+  - never
+  no-mixed-operators:
+  - off
+  no-underscore-dangle:
+  - error
+  - allow:
+    - _id
