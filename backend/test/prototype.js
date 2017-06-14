@@ -12,12 +12,26 @@ app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${r
 
 const main = async () => {
   const db = await MongoClient.connect(url)
-  app.post('/news', async (req, res) => {
+  // post news and comment
+  app.post('/data', async (req, res) => {
     const data = req.body
     data.timestamp = new Date()
+    data.upvote = 0
+    data.downvote = 0
+    data.comments = {}
     console.log(data)
-    const r = await db.collection('News').insertOne(data)
+    const r = await db.collection('Data').insertOne(data)
+    if (data.type === 'news') {
+      console.log('News added to the database.')
+    } else {
+      console.log('Comment added to the database.') // Updating comment array is under development
+    }
     res.send('Success')
+  })
+  // retreive news and comment sorted by timestamp in reversed order
+  app.get('/data', async (req, res) => {
+    const timeline = await db.collection('Data').find().sort({ timestamp: -1 }).toArray()
+    res.send(timeline)
   })
 }
 
