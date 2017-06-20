@@ -6,7 +6,8 @@ const ObjectID = require('mongodb').ObjectID
 const app = express()
 app.use(bodyParser.json())
 
-const url = 'mongodb://puru:19880818@ds155201.mlab.com:55201/test_new_mongodb'
+// const url = 'mongodb://puru:19880818@ds155201.mlab.com:55201/test_new_mongodb'
+const url = process.env.URL
 
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
