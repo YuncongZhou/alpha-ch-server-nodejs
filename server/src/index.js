@@ -33,24 +33,25 @@ const main = async () => {
         res.status(409).json({ success: false })
       }
     } else {
-      const parentId = ObjectID.createFromHexString(req.body.parent_id, (err, r) => {
-        if (err) {
+      const re = /[0-9a-f]{24}/
+      if (!(req.body.parent_id.length === 24 && re.test(req.body.parent_id))) {
+        console.log('Parent post not found. Abort.')
+        res.status(409).json({ success: false })
+      } else {
+        const parentId = ObjectID.createFromHexString(req.body.parent_id)
+        if (await db.collection('Data').findOne({ _id: parentId })) {
+          const r = await db.collection('Data').insertOne(data)
+          await db.collection('Data').findOneAndUpdate(
+            { _id: parentId },
+            { $push: { comment_ids: r.insertedId.toHexString() } },
+            (err, r) => { console.log('A error occurred while inserting comment') })
+          console.log(r.insertedId.toHexString())
+          console.log('Comment added to the database.')
+          res.status(201).json({ success: true })
+        } else {
           console.log('Parent post not found. Abort.')
           res.status(409).json({ success: false })
         }
-      })
-      if (parentId && await db.collection('Data').findOne({ _id: parentId })) {
-        const r = await db.collection('Data').insertOne(data)
-        await db.collection('Data').findOneAndUpdate(
-          { _id: parentId },
-          { $push: { comment_ids: r.insertedId.toHexString() } },
-          (err, r) => { console.log('A error occurred while inserting comment') })
-        console.log(r.insertedId.toHexString())
-        console.log('Comment added to the database.')
-        res.status(201).json({ success: true })
-      } else {
-        console.log('Parent post not found. Abort.')
-        res.status(409).json({ success: false })
       }
     }
   })
