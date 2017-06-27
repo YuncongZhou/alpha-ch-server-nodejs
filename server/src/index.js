@@ -35,17 +35,20 @@ const main = async () => {
     } else {
       const re = /[0-9a-f]{24}/
       if (!(req.body.parent_id.length === 24 && re.test(req.body.parent_id))) {
-        console.log('Parent post not found. Abort.')
+        console.log('Invalid parent id found. Abort.')
         res.status(409).json({ success: false })
       } else {
         const parentId = ObjectID.createFromHexString(req.body.parent_id)
         if (await db.collection('Data').findOne({ _id: parentId })) {
           const r = await db.collection('Data').insertOne(data)
-          await db.collection('Data').findOneAndUpdate(
+          await db.collection('Data').updateOne(
             { _id: parentId },
             { $push: { comment_ids: r.insertedId.toHexString() } },
-            (err, r) => { console.log('A error occurred while inserting comment') })
-          console.log(r.insertedId.toHexString())
+            (err, result) => {
+              if (err) {
+                console.log('A error occurred while appending comment id')
+              }
+            })
           console.log('Comment added to the database.')
           res.status(201).json({ success: true })
         } else {
