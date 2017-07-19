@@ -27,33 +27,33 @@ const main = async () => {
       if (!await db.collection('Data').findOne({ url: data.url })) {
         const r = await db.collection('Data').insertOne(data)
         console.log('News added to the database.')
-        res.status(201).json({ success: true })
+        res.send(201)
       } else {
         console.log('Duplicate news found. Abort.')
-        res.status(409).json({ success: false })
+        res.send(409)
       }
     } else {
-      const re = /[0-9a-f]{24}/
-      if (!(req.body.parent_id.length === 24 && re.test(req.body.parent_id))) {
-        console.log('Invalid parent id found. Abort.')
-        res.status(409).json({ success: false })
-      } else {
-        const parentId = ObjectID.createFromHexString(req.body.parent_id)
+      try {
+        const parentId = ObjectID.createFromHexString(req.body.parentId)
         if (await db.collection('Data').findOne({ _id: parentId })) {
           const r = await db.collection('Data').insertOne(data)
           await db.collection('Data').updateOne(
             { _id: parentId },
-            { $push: { comment_ids: r.insertedId.toHexString() } },
-            (err, result) => {
-              if (err) {
-                console.log('A error occurred while appending comment id')
-              }
-            })
+            { $push: { comment_ids: r.insertedId.toHexString() } })
           console.log('Comment added to the database.')
-          res.status(201).json({ success: true })
+          res.send(201)
         } else {
           console.log('Parent post not found. Abort.')
-          res.status(409).json({ success: false })
+          res.send(400)
+        }
+      } catch (err) {
+        if (req.body.parentId === null) {
+          const r = await db.collection('Data').insertOne(data)
+          console.log('Comment added to the database.')
+          res.send(201)
+        } else {
+          console.log('Invalid parent ID. Abort.')
+          res.send(400)
         }
       }
     }
