@@ -40,7 +40,7 @@ const main = async () => {
   const db = await MongoClient.connect(url)
   // post case 0: news , case 1: top-level comment, case 2: non top-level comment
   app.post('/posts', async (req, res) => {
-    let parentId = null
+    let parentId
     switch (req.body.type) {
       case 0: {
         const duplicate = await db.collection('posts').findOne({ url: req.body.url })
