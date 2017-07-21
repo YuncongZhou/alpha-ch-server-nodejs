@@ -11,24 +11,24 @@ const url = process.env.URL
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
-const createPost = (req, type) => {
+const createPost = (body) => {
   const post = {}
-  switch (type) {
+  switch (body.type) {
     case 0:
-      post.title = req.body.title
-      post.url = req.body.url
+      post.title = body.title
+      post.url = body.url
       break
     case 1:
-      post.title = req.body.title
-      post.body = req.body.body
+      post.title = body.title
+      post.body = body.body
       break
     case 2:
-      post.body = req.body.body
-      post.parent_id = req.body.parentId
+      post.body = body.body
+      post.parent_id = body.parentId
       break
     default:
   }
-  post.type = req.body.type
+  post.type = body.type
   post.timestamp = new Date()
   post.child_ids = []
   post.upvote = 0
@@ -40,48 +40,43 @@ const main = async () => {
   const db = await MongoClient.connect(url)
   // post case 0: news , case 1: top-level comment, case 2: non top-level comment
   app.post('/posts', async (req, res) => {
+    let parentId = null
     switch (req.body.type) {
       case 0: {
         const duplicate = await db.collection('posts').findOne({ url: req.body.url })
-        if (!duplicate) {
-          const post = createPost(req, req.body.type)
-          const r = await db.collection('posts').insertOne(post)
-          const id = r.insertedId.toHexString()
-          res.status(201).send({ postId: id })
-        } else {
+        if (duplicate) {
           res.status(409).send({ postId: duplicate._id.toHexString() })
+          return
         }
         break
       }
-      case 1: {
-        const post = createPost(req, req.body.type)
-        const r = await db.collection('posts').insertOne(post)
-        const id = r.insertedId.toHexString()
-        res.status(201).send({ postId: id })
+      case 1:
         break
-      }
-      case 2: {
+      case 2:
         try {
-          const parentId = ObjectID.createFromHexString(req.body.parentId)
-          if (await db.collection('posts').findOne({ _id: parentId })) {
-            const post = createPost(req, req.body.type)
-            const r = await db.collection('posts').insertOne(post)
-            const id = r.insertedId.toHexString()
-            await db.collection('posts').updateOne(
-              { _id: parentId },
-              { $push: { child_ids: id } })
-            res.status(201).send({ postId: id })
-          } else {
-            res.sendStatus(400)
-          }
+          parentId = ObjectID.createFromHexString(req.body.parentId)
         } catch (err) {
-          res.sendStatus(400)
+          res.status(400).end()
+          return
+        }
+        if (!await db.collection('posts').findOne({ _id: parentId })) {
+          res.status(400).end()
+          return
         }
         break
-      }
       default:
-        res.sendStatus(400)
+        res.status(400).end()
+        return
     }
+    const post = createPost(req.body)
+    const r = await db.collection('posts').insertOne(post)
+    const id = r.insertedId.toHexString()
+    if (parentId) {
+      await db.collection('posts').updateOne(
+      { _id: parentId },
+      { $push: { child_ids: id } })
+    }
+    res.status(201).send({ postId: id })
   })
   // retreive news and comment sorted by timestamp in reversed order
   app.get('/posts', async (req, res) => {
