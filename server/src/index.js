@@ -11,7 +11,7 @@ const url = process.env.URL
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
-function createPost(req, type) {
+const createPost = (req, type) => {
   const post = {}
   switch (type) {
     case 0:
@@ -27,7 +27,6 @@ function createPost(req, type) {
       post.parent_id = req.body.parentId
       break
     default:
-      break
   }
   post.type = req.body.type
   post.timestamp = new Date()
@@ -82,7 +81,6 @@ const main = async () => {
       }
       default:
         res.sendStatus(400)
-        break
     }
   })
   // retreive news and comment sorted by timestamp in reversed order
