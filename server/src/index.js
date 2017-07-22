@@ -8,6 +8,7 @@ app.use(bodyParser.json())
 
 const url = process.env.URL
 
+// eslint-disable-next-line no-console
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
