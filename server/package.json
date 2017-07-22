@@ -5,14 +5,22 @@
   "main": "index.js",
   "author": "Yuncong Zhou",
   "license": "MIT",
+  "scripts": {
+    "start": "node -r dotenv/config src",
+    "lint": "eslint src",
+    "format": "prettier --print-width 120 --no-semi --single-quote --trailing-comma all --write \"src/**/*.js\""
+  },
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
     "mongodb": "^2.2.28"
   },
   "devDependencies": {
+    "dotenv": "^4.0.0",
     "eslint": "^3.19.0",
-    "eslint-config-airbnb-base": "^11.2.0",
     "eslint-plugin-import": "^2.3.0"
+  },
+  "engines": {
+    "node": "8"
   }
 }
