@@ -11,7 +11,7 @@ const url = process.env.URL
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
-const createPost = (body) => {
+const createPost = body => {
   const post = {}
   switch (body.type) {
     case 0:
@@ -72,9 +72,7 @@ const main = async () => {
     const r = await db.collection('posts').insertOne(post)
     const id = r.insertedId.toHexString()
     if (parentId) {
-      await db.collection('posts').updateOne(
-      { _id: parentId },
-      { $push: { child_ids: id } })
+      await db.collection('posts').updateOne({ _id: parentId }, { $push: { child_ids: id } })
     }
     res.status(201).send({ postId: id })
   })
