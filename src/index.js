@@ -78,16 +78,22 @@ const main = async () => {
     res.status(201).send({ postId: id })
   })
   //vote posts
-  app.put('/votes/:id', async (req,res) =>{
-    const id = req.params.id
+  app.put('/votes/:id', async (req,res)=>{
+    let id
+    try {
+      id = ObjectID.createFromHexString(req.params.id)
+    } catch (err) {
+      res.status(400).end()
+      return
+    }
     const direction = req.body.direction
     if (direction){
       await db.collection('posts').updateOne({ _id: id }, { $inc: { upvote: 1 } })
     } else {
       await db.collection('posts').updateOne({ _id: id }, { $inc: { downvote: 1 } })
     }
-    res.status(200).send({ postId: id})
-  })
+    res.status(200).send({ postId: id.toHexString() })
+  } )
   // retreive news and comment sorted by timestamp in reversed order
   app.get('/posts', async (req, res) => {
     const timeline = await db.collection('posts').find().sort({ timestamp: -1 }).toArray()
