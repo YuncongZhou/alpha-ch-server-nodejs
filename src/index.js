@@ -77,6 +77,14 @@ const main = async () => {
     }
     res.status(201).send({ postId: id })
   })
+  //vote posts
+    const direction = req.body.direction
+    if (direction){
+      await db.collection('posts').updateOne({ _id: id }, { $inc: { upvote: 1 } })
+    } else {
+      await db.collection('posts').updateOne({ _id: id }, { $inc: { downvote: 1 } })
+    }
+    res.status(200).send({ postId: id})
   // retreive news and comment sorted by timestamp in reversed order
   app.get('/posts', async (req, res) => {
     const timeline = await db.collection('posts').find().sort({ timestamp: -1 }).toArray()
