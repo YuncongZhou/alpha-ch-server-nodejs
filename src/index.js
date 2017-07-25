@@ -97,8 +97,8 @@ const main = async () => {
         res.status(400).end()
         return
     }
-    const postObject = await db.collection('posts').findOne({ _id: id })
-    res.status(201).send(postObject)
+    const post = await db.collection('posts').findOne({ _id: id })
+    res.status(201).send(post)
   })
   // retreive news and comment sorted by timestamp in reversed order
   app.get('/posts', async (req, res) => {
