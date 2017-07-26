@@ -12,6 +12,16 @@ const url = process.env.URL
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
+const calculateWilsonScore = (upvote, downvote, zScore = 2) => {
+  const total = upvote + downvote
+  if (total <= 0 || upvote < 0 || downvote < 0) return 0
+  const p = upvote / total
+  const zSqare = Math.pow(zScore, 2)
+  return (
+    (p + zSqare / (2 * total) - zScore * Math.sqrt((p * (1 - p) + zSqare / (4 * total)) / total)) / (1 + zSqare / total)
+  )
+}
+
 const createPost = body => {
   const post = {}
   switch (body.type) {
@@ -34,6 +44,7 @@ const createPost = body => {
   post.child_ids = []
   post.upvote = 0
   post.downvote = 0
+  post.wilson_score = 0
   return post
 }
 
@@ -79,7 +90,7 @@ const main = async () => {
   })
   //vote posts
   app.put('/votes/:id', async (req, res) => {
-    let id
+    let id, direction
     try {
       id = ObjectID.createFromHexString(req.params.id)
     } catch (err) {
@@ -88,16 +99,20 @@ const main = async () => {
     }
     switch (req.body.direction) {
       case 0:
-        await db.collection('posts').updateOne({ _id: id }, { $inc: { downvote: 1 } })
+        direction = 'downvote'
         break
       case 1:
-        await db.collection('posts').updateOne({ _id: id }, { $inc: { upvote: 1 } })
+        direction = 'upvote'
         break
       default:
         res.status(400).end()
         return
     }
-    const post = await db.collection('posts').findOne({ _id: id })
+    await db.collection('posts').updateOne({ _id: id }, { $inc: { [direction]: 1 } })
+    let post = await db.collection('posts').findOne({ _id: id })
+    const wilsonScore = calculateWilsonScore(post.upvote, post.downvote)
+    await db.collection('posts').updateOne({ _id: id }, { $set: { wilson_score: wilsonScore } })
+    post = await db.collection('posts').findOne({ _id: id })
     res.status(201).send(post)
   })
   // retreive news and comment sorted by timestamp in reversed order
