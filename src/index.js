@@ -12,7 +12,8 @@ const url = process.env.URL
 app.listen(3000, () => console.log('Listening to port 3000'))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
-const calculateWilsonScore = (upvote, downvote, zScore = 2) => {
+const z = 2  // choose 2 sigma to guarantee 97.7% accuracy
+const calculateWilsonScore = (upvote, downvote, zScore = z) => {
   const total = upvote + downvote
   if (total <= 0 || upvote < 0 || downvote < 0) return 0
   const p = upvote / total
@@ -109,10 +110,65 @@ const main = async () => {
         return
     }
     await db.collection('posts').updateOne({ _id: id }, { $inc: { [direction]: 1 } })
-    let post = await db.collection('posts').findOne({ _id: id })
+    await db.collection('posts').aggregate(
+      [
+        { $match: { _id: id } },
+        {
+          $project: {
+            wilson_score: {
+              $multiply: [
+                { $divide: [1, { $add: [1, { $divide: [{ $pow: [z, 2] }, { $add: ['$upvote', '$downvote'] }] }] }] },
+                {
+                  $add: [
+                    { $divide: ['$upvote', { $add: ['$upvote', '$downvote'] }] },
+                    {
+                      $subtract: [
+                        { $divide: [{ $pow: [z, 2] }, { $multiply: [2, { $add: ['$upvote', '$downvote'] }] }] },
+                        {
+                          $multiply: [
+                            z,
+                            {
+                              $sqrt: {
+                                $add: [
+                                  {
+                                    $multiply: [
+                                      {
+                                        $divide: [
+                                          { $divide: ['$upvote', { $add: ['$upvote', '$downvote'] }] },
+                                          { $add: ['$upvote', '$downvote'] },
+                                        ],
+                                      },
+                                      { $subtract: [1, { $divide: ['$upvote', { $add: ['$upvote', '$downvote'] }] }] },
+                                    ],
+                                  },
+                                  {
+                                    $divide: [
+                                      { $pow: [z, 2] },
+                                      { $multiply: [4, { $pow: [{ $add: ['$upvote', '$downvote'] }, 2] }] },
+                                    ],
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+      ],
+      (err, res) => {
+        db.collection('posts').updateOne({ _id: id }, { $set: { wilson_score: res[0].wilson_score } })
+        console.log(res[0].wilson_score)
+      },
+    )
+    const post = await db.collection('posts').findOne({ _id: id })
     const wilsonScore = calculateWilsonScore(post.upvote, post.downvote)
-    await db.collection('posts').updateOne({ _id: id }, { $set: { wilson_score: wilsonScore } })
-    post = await db.collection('posts').findOne({ _id: id })
+    console.log(wilsonScore)
     res.status(201).send(post)
   })
   // retreive news and comment sorted by timestamp in reversed order
