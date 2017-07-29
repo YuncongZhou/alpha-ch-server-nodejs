@@ -115,8 +115,10 @@ const main = async () => {
     post = await db.collection('posts').findOne({ _id: id })
     res.status(201).send(post)
   })
-  // retreive news and comment sorted by timestamp in reversed order
-  app.get('/posts', async (req, res) => {
+  // retreive news and comment sorted by wilson score or timestamp in reversed order
+    res.json(wilsonScore)
+  })
+  app.get('/posts/timeline', async (req, res) => {
     const timeline = await db.collection('posts').find().sort({ timestamp: -1 }).toArray()
     res.json(timeline)
   })
