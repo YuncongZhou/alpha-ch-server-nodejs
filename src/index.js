@@ -117,12 +117,24 @@ const main = async () => {
   })
   // retreive news and comment sorted by wilson score or timestamp in reversed order
   app.get('/posts', async (req, res) => {
-    const wilsonScore = await db.collection('posts').find().sort({ wilson_score: -1 }).toArray()
-    res.json(wilsonScore)
-  })
-  app.get('/posts/timeline', async (req, res) => {
-    const timeline = await db.collection('posts').find().sort({ timestamp: -1 }).toArray()
-    res.json(timeline)
+    let list
+    switch (req.query.params) {
+      case 'score':
+        list = await db.collection('posts').find().sort({ wilson_score: -1 }).toArray()
+        res.json(list)
+        break
+      case 'time':
+        list = await db.collection('posts').find().sort({ timestamp: -1 }).toArray()
+        res.json(list)
+        break
+      case 'downvote':
+        list = await db.collection('posts').find().sort({ downvote: -1 }).toArray()
+        res.json(list)
+        break
+      default:
+        list = await db.collection('posts').find().sort({ wilson_score: -1 }).toArray()
+        res.json(list)
+    }
   })
 }
 
