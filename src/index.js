@@ -118,7 +118,7 @@ const main = async () => {
   // retreive news and comment sorted by wilson score or timestamp in reversed order
   app.get('/posts', async (req, res) => {
     let list
-    switch (req.query.params) {
+    switch (req.query.sortBy || 'score') {
       case 'score':
         list = await db.collection('posts').find().sort({ wilson_score: -1 }).toArray()
         res.json(list)
@@ -132,8 +132,7 @@ const main = async () => {
         res.json(list)
         break
       default:
-        list = await db.collection('posts').find().sort({ wilson_score: -1 }).toArray()
-        res.json(list)
+        res.status(400).end()
     }
   })
 }
