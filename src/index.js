@@ -8,8 +8,9 @@ app.use(bodyParser.json())
 
 const url = process.env.URL
 
+const portNumber = 4000
 // eslint-disable-next-line no-console
-app.listen(3000, () => console.log('Listening to port 3000'))
+app.listen(portNumber, () => console.log(`Listening to port ${portNumber}`))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
 
 const calculateWilsonScore = (upvote, downvote, zScore = 2) => {
