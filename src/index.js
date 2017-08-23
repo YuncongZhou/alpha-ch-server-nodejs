@@ -1,9 +1,11 @@
 const express = require('express')
+const cors = require('cors')
 const bodyParser = require('body-parser')
 const MongoClient = require('mongodb').MongoClient
 const ObjectID = require('mongodb').ObjectID
 
 const app = express()
+app.use(cors())
 app.use(bodyParser.json())
 
 const url = process.env.URL
@@ -121,15 +123,15 @@ const main = async () => {
     let list
     switch (req.query.sortBy || 'score') {
       case 'score':
-        list = await db.collection('posts').find().sort({ wilson_score: -1 }).toArray()
+        list = await db.collection('posts').find({type: { $in: [0, 1]}}).sort({ wilson_score: -1 }).toArray()
         res.json(list)
         break
       case 'time':
-        list = await db.collection('posts').find().sort({ timestamp: -1 }).toArray()
+        list = await db.collection('posts').find({type: { $in: [0, 1]}}).sort({ timestamp: -1 }).toArray()
         res.json(list)
         break
       case 'downvote':
-        list = await db.collection('posts').find().sort({ downvote: -1 }).toArray()
+        list = await db.collection('posts').find({type: { $in: [0, 1]}}).sort({ downvote: -1 }).toArray()
         res.json(list)
         break
       default:
