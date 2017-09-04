@@ -51,7 +51,7 @@ const createPost = body => {
   return post
 }
 
-const convertId = ( _id ) =>{
+const convertId = _id => {
   let id
   try {
     id = ObjectID.createFromHexString(_id)
@@ -131,15 +131,15 @@ const main = async () => {
     let list
     switch (req.query.sortBy || 'score') {
       case 'score':
-        list = await db.collection('posts').find({type: { $in: [0, 1]}}).sort({ wilson_score: -1 }).toArray()
+        list = await db.collection('posts').find({ type: { $in: [0, 1] } }).sort({ wilson_score: -1 }).toArray()
         res.json(list)
         break
       case 'time':
-        list = await db.collection('posts').find({type: { $in: [0, 1]}}).sort({ timestamp: -1 }).toArray()
+        list = await db.collection('posts').find({ type: { $in: [0, 1] } }).sort({ timestamp: -1 }).toArray()
         res.json(list)
         break
       case 'downvote':
-        list = await db.collection('posts').find({type: { $in: [0, 1]}}).sort({ downvote: -1 }).toArray()
+        list = await db.collection('posts').find({ type: { $in: [0, 1] } }).sort({ downvote: -1 }).toArray()
         res.json(list)
         break
       default:
@@ -147,24 +147,23 @@ const main = async () => {
     }
   })
   //given a post id, retreive the post object and all the consequence comments.
-  app.get('/post/:id', async (req, res) => {
+  app.get('/comments/:id', async (req, res) => {
     let postList = []
     let id = convertId(req.params.id)
     if (!id) {
       res.status(400).end()
       return
     }
-    const root = await db.collection('posts').findOne( {_id : id})
+    const root = await db.collection('posts').findOne({ _id: id })
     let temp
     postList.push(root)
-    for( let i = 0; i < root.child_ids.length; i++) {
+    for (let i = 0; i < root.child_ids.length; i++) {
       id = convertId(root.child_ids[i])
-      temp = await db.collection('posts').findOne( {_id : id})
+      temp = await db.collection('posts').findOne({ _id: id })
       postList.push(temp)
     }
     res.json(postList)
   })
 }
-
 
 main()
