@@ -1,3 +1,3 @@
-# @chan
+# @Channel.tech
 A discussion board
-@chan is a discussion board. This server is implemented with node.js and express alongside mongodb.
+@Channel.tech is a discussion board. This server is implemented with Node.js ,Express and MongoDB.
