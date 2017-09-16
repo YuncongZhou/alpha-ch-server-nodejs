@@ -51,16 +51,6 @@ const createPost = body => {
   return post
 }
 
-const convertId = _id => {
-  let id
-  try {
-    id = ObjectID.createFromHexString(_id)
-  } catch (err) {
-    return null
-  }
-  return id
-}
-
 const main = async () => {
   const db = await MongoClient.connect(url)
   // post case 0: news , case 1: top-level comment, case 2: non top-level comment
@@ -78,8 +68,9 @@ const main = async () => {
       case 1:
         break
       case 2:
-        parentId = convertId(req.body.parentId)
-        if (!parentId) {
+      try {
+          parentId = ObjectID.createFromHexString(req.body.parentId)
+        } catch (err) {
           res.status(400).end()
           return
         }
@@ -103,8 +94,9 @@ const main = async () => {
   //vote posts
   app.put('/votes/:id', async (req, res) => {
     let id, direction
-    id = convertId(req.params.id)
-    if (!id) {
+    try {
+      id = ObjectID.createFromHexString(req.params.id)
+    } catch (err) {
       res.status(400).end()
       return
     }
@@ -149,8 +141,10 @@ const main = async () => {
   //given a post id, retreive the post object and all the consequence comments.
   app.get('/comments/:id', async (req, res) => {
     let postList = []
-    let id = convertId(req.params.id)
-    if (!id) {
+    let id
+    try {
+      id = ObjectID.createFromHexString(req.params.id)
+    } catch (err) {
       res.status(400).end()
       return
     }
@@ -158,7 +152,7 @@ const main = async () => {
     let temp
     postList.push(root)
     for (let i = 0; i < root.child_ids.length; i++) {
-      id = convertId(root.child_ids[i])
+      id = ObjectID.createFromHexString(root.child_ids[i])
       temp = await db.collection('posts').findOne({ _id: id })
       postList.push(temp)
     }
