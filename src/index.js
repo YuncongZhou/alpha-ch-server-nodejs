@@ -9,8 +9,8 @@ app.use(cors())
 app.use(bodyParser.json())
 
 const url = process.env.URL
+const portNumber = process.env.PORT
 
-const portNumber = 4000
 // eslint-disable-next-line no-console
 app.listen(portNumber, () => console.log(`Listening to port ${portNumber}`))
 app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
