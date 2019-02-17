@@ -13,7 +13,9 @@ const portNumber = process.env.PORT
 
 // eslint-disable-next-line no-console
 app.listen(portNumber, () => console.log(`Listening to port ${portNumber}`))
-app.get('/user/:id', (req, res) => res.send(`Welcome to the homepage of user ${req.params.id}.`))
+app.get('/user/:id', (req, res) =>
+  res.send(`Welcome to the homepage of user ${req.params.id}.`)
+)
 
 const calculateWilsonScore = (upvote, downvote, zScore = 2) => {
   const total = upvote + downvote
@@ -21,7 +23,10 @@ const calculateWilsonScore = (upvote, downvote, zScore = 2) => {
   const p = upvote / total
   const zSqare = Math.pow(zScore, 2)
   return (
-    (p + zSqare / (2 * total) - zScore * Math.sqrt((p * (1 - p) + zSqare / (4 * total)) / total)) / (1 + zSqare / total)
+    (p +
+      zSqare / (2 * total) -
+      zScore * Math.sqrt((p * (1 - p) + zSqare / (4 * total)) / total)) /
+    (1 + zSqare / total)
   )
 }
 
@@ -52,13 +57,15 @@ const createPost = body => {
 }
 
 const main = async () => {
-  const db = await MongoClient.connect(url)
+  const db = await MongoClient.connect(url, { useNewUrlParser: true })
   // post case 0: news , case 1: top-level comment, case 2: non top-level comment
   app.post('/posts', async (req, res) => {
     let parentId
     switch (req.body.type) {
       case 0: {
-        const duplicate = await db.collection('posts').findOne({ url: req.body.url })
+        const duplicate = await db
+          .collection('posts')
+          .findOne({ url: req.body.url })
         if (duplicate) {
           res.status(409).send({ postId: duplicate._id.toHexString() })
           return
@@ -68,13 +75,13 @@ const main = async () => {
       case 1:
         break
       case 2:
-      try {
+        try {
           parentId = ObjectID.createFromHexString(req.body.parentId)
         } catch (err) {
           res.status(400).end()
           return
         }
-        if (!await db.collection('posts').findOne({ _id: parentId })) {
+        if (!(await db.collection('posts').findOne({ _id: parentId }))) {
           res.status(400).end()
           return
         }
@@ -87,7 +94,9 @@ const main = async () => {
     const r = await db.collection('posts').insertOne(post)
     const id = r.insertedId.toHexString()
     if (parentId) {
-      await db.collection('posts').updateOne({ _id: parentId }, { $push: { child_ids: id } })
+      await db
+        .collection('posts')
+        .updateOne({ _id: parentId }, { $push: { child_ids: id } })
     }
     res.status(201).send({ postId: id })
   })
@@ -111,10 +120,14 @@ const main = async () => {
         res.status(400).end()
         return
     }
-    await db.collection('posts').updateOne({ _id: id }, { $inc: { [direction]: 1 } })
+    await db
+      .collection('posts')
+      .updateOne({ _id: id }, { $inc: { [direction]: 1 } })
     let post = await db.collection('posts').findOne({ _id: id })
     const wilsonScore = calculateWilsonScore(post.upvote, post.downvote)
-    await db.collection('posts').updateOne({ _id: id }, { $set: { wilson_score: wilsonScore } })
+    await db
+      .collection('posts')
+      .updateOne({ _id: id }, { $set: { wilson_score: wilsonScore } })
     post = await db.collection('posts').findOne({ _id: id })
     res.status(201).send(post)
   })
@@ -123,15 +136,27 @@ const main = async () => {
     let list
     switch (req.query.sortBy || 'score') {
       case 'score':
-        list = await db.collection('posts').find({ type: { $in: [0, 1] } }).sort({ wilson_score: -1 }).toArray()
+        list = await db
+          .collection('posts')
+          .find({ type: { $in: [0, 1] } })
+          .sort({ wilson_score: -1 })
+          .toArray()
         res.json(list)
         break
       case 'time':
-        list = await db.collection('posts').find({ type: { $in: [0, 1] } }).sort({ timestamp: -1 }).toArray()
+        list = await db
+          .collection('posts')
+          .find({ type: { $in: [0, 1] } })
+          .sort({ timestamp: -1 })
+          .toArray()
         res.json(list)
         break
       case 'downvote':
-        list = await db.collection('posts').find({ type: { $in: [0, 1] } }).sort({ downvote: -1 }).toArray()
+        list = await db
+          .collection('posts')
+          .find({ type: { $in: [0, 1] } })
+          .sort({ downvote: -1 })
+          .toArray()
         res.json(list)
         break
       default:
